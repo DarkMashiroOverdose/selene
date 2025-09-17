@@ -188,5 +188,6 @@ pub(open) trait Backend {
   get_debug_info(Self) -> DebugInfo
   preload_img(Self, String) -> Unit
   preload_audio(Self, String) -> Unit
+  set_render_target(Self, String) -> Unit
 }
 

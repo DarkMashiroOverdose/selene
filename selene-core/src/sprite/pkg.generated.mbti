@@ -9,11 +9,17 @@ import(
 // Values
 fn frames_from_atlas(String, Int, width~ : Double, height~ : Double, offset? : @math.Vec2D, space_x? : Double) -> Array[AnimationFrame]
 
+fn[T] get_or(T?, T) -> T
+
 fn is_animation_finished(@system.Entity) -> Bool
 
-fn play_animation(@system.Entity, Animation, from_start? : Bool, loop_? : Bool, rate? : Double, transform? : @math.Transform) -> Unit
+fn play_animation(@system.Entity, Animation, from_start? : Bool, loop_? : Bool, rate? : Double, transform? : @math.Transform, layer? : RenderLayer) -> Unit
 
 fn render_sprite_system(&@system.Backend) -> Unit
+
+fn render_ui_system(&@system.Backend) -> Unit
+
+fn render_world_system(&@system.Backend) -> Unit
 
 let sprites : Map[@system.Entity, Sprite]
 
@@ -50,16 +56,26 @@ pub(all) struct Picture {
 }
 fn Picture::new(@math.Vec2D, String, transform? : @math.Transform, repeat? : @system.RepeatMode) -> Self
 
+pub enum RenderLayer {
+  GameWorld
+  UI
+}
+fn RenderLayer::game_world() -> Self
+fn RenderLayer::ui() -> Self
+impl Eq for RenderLayer
+impl Show for RenderLayer
+
 pub(all) struct Sprite {
   sprite_type : SpriteType
   zindex : Int
   mut visible : Bool
   offset : @math.Vec2D
+  layer : RenderLayer
 }
-fn Sprite::from_animation(Animation, Int, offset? : @math.Vec2D) -> Self
-fn Sprite::from_color_rect(ColorRect, Int, offset? : @math.Vec2D) -> Self
-fn Sprite::from_picture(Picture, Int, offset? : @math.Vec2D) -> Self
-fn Sprite::from_text(Text, Int, offset? : @math.Vec2D) -> Self
+fn Sprite::from_animation(Animation, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
+fn Sprite::from_color_rect(ColorRect, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
+fn Sprite::from_picture(Picture, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
+fn Sprite::from_text(Text, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 
 pub enum SpriteType {
   Picture(Picture)

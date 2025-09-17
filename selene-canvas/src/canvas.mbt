@@ -16,6 +16,10 @@
 struct CanvasBackend {
   canvas : @dom.HTMLCanvasElement
   context : @dom.CanvasRenderingContext2D
+  //加入UI画布以支持分层渲染
+  ui_canvas : @dom.HTMLCanvasElement
+  ui_context : @dom.CanvasRenderingContext2D
+  mut active_context : @dom.CanvasRenderingContext2D
   mut viewport_size : @math.Vec2D
   mut frame_counter : UInt64
   mut current_fps : Double
@@ -26,12 +30,17 @@ struct CanvasBackend {
 
 ///|
 pub fn CanvasBackend::new() -> CanvasBackend {
+  //原有的canvas和context保留用于兼容旧版系统
   let canvas = @dom.document()
-    .get_element_by_id("canvas")
-    .unwrap()
-    .to_html_canvas_element()
-    .unwrap()
+    .get_element_by_id("game-canvas")
+    .unwrap().to_html_canvas_element().unwrap()
   let context = canvas.get_context("2d").to0().unwrap()
+  //新增UI画布和context
+  let ui_canvas = @dom.document()
+    .get_element_by_id("ui-canvas")
+    .unwrap().to_html_canvas_element().unwrap()
+  let ui_context = ui_canvas.get_context("2d").to0().unwrap()
+
   {
     context,
     canvas,
@@ -41,6 +50,9 @@ pub fn CanvasBackend::new() -> CanvasBackend {
     execution_time: {},
     mouse_movement: Ref::new(None),
     zoom: 1.0,
+    ui_canvas,
+    ui_context,
+    active_context: context,
   }
 }
 
@@ -69,10 +81,18 @@ pub impl @system.Backend for CanvasBackend with build(
   set_viewport_width(self.canvas, canvas_width)
   set_image_smoothing_enabled(self.context, image_smooth)
   self.context.scale(zoom, zoom)
+
+  //仿照原版设置UI画布的尺寸和缩放
+  set_viewport_height(self.ui_canvas, canvas_height) 
+  set_viewport_width(self.ui_canvas, canvas_width)
+  set_image_smoothing_enabled(self.ui_context, image_smooth)
+  self.ui_context.scale(zoom, zoom) 
+
   self.zoom = zoom
   schedule_with_fixed_interval(1000 / fps.to_double(), fn(delta) {
     self.current_fps = 1000.0 / delta
     self.context.clear_rect(0, 0, canvas_width, canvas_height)
+    self.ui_context.clear_rect(0, 0, canvas_width, canvas_height) //仿照
     let renders = []
     for system in systems {
       let start_time = time_now()

@@ -44,11 +44,33 @@
 /// inspect(sprite.offset.x, content="0.0") // Default offset is zero
 /// ```
 ///
+/// 
+
+//用于定义渲染层级的默认值,以适配无layer参数的旧版本精灵
+//代码来源https://www.moonbitlang.com/assets/files/lec4-ad72a543cfc3959ebd73b9a96a3afc56.pdf
+pub fn[T] get_or(opt: Option[T], default: T) -> T {
+  match opt {
+    Some(value) => value
+    None => default
+  }
+}
+//定义渲染层
+pub enum RenderLayer {
+  GameWorld //游戏世界层，会受到摄像机和后期处理影响
+  UI        //UI层，不受摄像机和后期处理影响
+} derive(Eq, Show)
+pub fn RenderLayer::game_world() -> RenderLayer {
+  GameWorld
+}
+pub fn RenderLayer::ui() -> RenderLayer {
+  UI
+}
 pub(all) struct Sprite {
   sprite_type : SpriteType
   zindex : Int
   mut visible : Bool
   offset : @math.Vec2D
+  layer: RenderLayer //添加渲染层级的定义
 }
 
 ///|
@@ -68,12 +90,14 @@ pub fn Sprite::from_animation(
   animation : Animation,
   zindex : Int,
   offset? : @math.Vec2D = @math.Vec2D::zero(),
+  layer? : RenderLayer,
 ) -> Sprite {
   {
     sprite_type: SpriteType::Animation(animation, frame=0),
     zindex,
     offset,
     visible: true,
+    layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
   }
 }
 
@@ -82,8 +106,15 @@ pub fn Sprite::from_picture(
   picture : Picture,
   zindex : Int,
   offset? : @math.Vec2D = @math.Vec2D::zero(),
+  layer? : RenderLayer,
 ) -> Sprite {
-  { sprite_type: SpriteType::Picture(picture), zindex, offset, visible: true }
+  { 
+    sprite_type: SpriteType::Picture(picture), 
+    zindex, 
+    offset, 
+    visible: true,
+    layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
+  }
 }
 
 ///|
@@ -91,8 +122,15 @@ pub fn Sprite::from_text(
   text : Text,
   zindex : Int,
   offset? : @math.Vec2D = @math.Vec2D::zero(),
+  layer? : RenderLayer,
 ) -> Sprite {
-  { sprite_type: SpriteType::Text(text), zindex, offset, visible: true }
+  { 
+    sprite_type: SpriteType::Text(text), 
+    zindex, 
+    offset, 
+    visible: true,
+    layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
+  }
 }
 
 ///|
@@ -100,12 +138,14 @@ pub fn Sprite::from_color_rect(
   color_rect : ColorRect,
   zindex : Int,
   offset? : @math.Vec2D = @math.Vec2D::zero(),
+  layer? : RenderLayer,
 ) -> Sprite {
   {
     sprite_type: SpriteType::ColorRect(color_rect),
     zindex,
     offset,
     visible: true,
+    layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
   }
 }
 
@@ -119,6 +159,8 @@ pub fn Sprite::from_color_rect(
 ///
 /// Panics if an entity has a sprite but no position component.
 ///
+/// 
+//保存原有的渲染顺序逻辑，以便兼容旧项目
 pub fn render_sprite_system(backend : &@system.Backend) -> Unit {
   let sprites = sprites.to_array().filter(fn(pair) { pair.0.is_alive() })
   sprites.sort_by(fn(sprite1, sprite2) {
@@ -168,3 +210,82 @@ pub fn render_sprite_system(backend : &@system.Backend) -> Unit {
     }
   }
 }
+
+
+// 新的渲染逻辑，分离世界层和UI层的渲染
+
+//世界层渲染几乎不变
+pub fn render_world_system(backend: &@system.Backend) -> Unit {
+  
+    backend.set_render_target("world")
+    let world_sprites = sprites.to_array().filter(fn(pair) {
+        pair.0.is_alive() && pair.1.layer == RenderLayer::GameWorld
+    })
+    world_sprites.sort_by(fn(sprite1, sprite2) {
+      if sprite1.1.zindex < sprite2.1.zindex { -1 } 
+      else if sprite1.1.zindex > sprite2.1.zindex { 1 }
+      else {
+        guard @position.positions.get(sprite1.0) is Some(pos1) else { return 0 }
+        guard @position.positions.get(sprite2.0) is Some(pos2) else { return 0 }
+        if pos1.0[Y] < pos2.0[Y] { -1 } 
+        else if pos1.0[Y] > pos2.0[Y] { 1 }
+        else { 0 }
+      }
+    })
+    for pair in world_sprites {
+        let e = pair.0
+        let sprite = pair.1
+        guard @position.positions.get(e) is Some(pos) else { continue }
+        //想了想最终还是保留了世界层原有的UI偏移逻辑，毕竟有些项目可能会用到
+        let render_pos = if @ui.uis.get(e) is None {
+            pos.0 - @camera.get_position()
+        } else {
+          pos.0
+        }
+        
+        render_sprite(backend, e, sprite, render_pos)
+    }
+}
+
+//UI层渲染不受摄像机影响
+pub fn render_ui_system(backend: &@system.Backend) -> Unit {
+
+    backend.set_render_target("ui")
+    let ui_sprites = sprites.to_array().filter(fn(pair) {
+        pair.0.is_alive() && pair.1.layer == RenderLayer::UI
+    })
+    ui_sprites.sort_by_key(fn(pair) { pair.1.zindex })
+    
+    for pair in ui_sprites {
+        let e = pair.0
+        let sprite = pair.1
+        guard @position.positions.get(e) is Some(pos) else { continue }
+
+        let render_pos = if @ui.uis.get(e) is None {
+          pos.0 - @camera.get_position()
+        } else {
+          pos.0
+        }
+        
+        render_sprite(backend, e, sprite, render_pos)
+    }
+}
+//通用渲染逻辑
+fn render_sprite(backend: &@system.Backend, e : @system.Entity, sprite: Sprite, pos: @math.Vec2D) -> Unit {
+    if !sprite.visible { return }
+    let final_pos = pos + sprite.offset
+    match sprite.sprite_type {
+        Picture(picture) =>
+            render_picture(backend, picture, final_pos)
+        Animation(anime, frame~) => {
+            let new_frame = render_animation(backend, anime, frame, final_pos, true)
+            let new_sprite_type = SpriteType::Animation(anime, frame=new_frame)
+            sprites.set(e, {..sprite, sprite_type: new_sprite_type})
+        }
+        Text(text) =>
+            render_text(backend, text, final_pos)
+        ColorRect(color_rect) =>
+            render_color_rect(backend, color_rect, final_pos)
+    }
+}
+

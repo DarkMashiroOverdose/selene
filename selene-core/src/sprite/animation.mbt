@@ -290,44 +290,56 @@ pub fn frames_from_atlas(
 /// @sprite.play_animation(entity, animation, loop_=false, rate=0.1)
 /// ```
 ///
+
 pub fn play_animation(
-  entity : @system.Entity,
-  animation : Animation,
-  from_start? : Bool = false,
-  loop_? : Bool,
-  rate? : Double,
-  transform? : @math.Transform,
-  // backward~ : Bool = false,
+  entity: @system.Entity,
+  animation: Animation,
+  from_start?: Bool,
+  loop_?: Bool,
+  rate?: Double,
+  transform?: @math.Transform,
+  layer? : RenderLayer,
 ) -> Unit {
-  guard sprites.get(entity)
-    is Some(
-      {
-        sprite_type: Animation(current_anime, frame=current_frame),
-        zindex,
-        visible,
-        offset,
+  let from_start = get_or(from_start, false)
+
+  let (current_anime, current_frame, zindex, visible, offset, current_layer) =
+    if sprites.get(entity) is Some(sprite) {
+      if sprite.sprite_type is Animation(anime, frame~) {
+        (anime, frame, sprite.zindex, sprite.visible, sprite.offset, sprite.layer)
+      } else {
+        // 如果实体之前不是动画精灵，则使用默认值
+        (animation, 0.0, sprite.zindex, sprite.visible, sprite.offset, sprite.layer)
       }
-    )
-  let loop_ = loop_.unwrap_or(animation.loop_)
-  let rate = rate.unwrap_or(animation.rate)
-  let transform = transform.unwrap_or(animation.transform)
+    } else {
+      // 如果实体之前没有精灵组件，则使用全新默认值
+      (animation, 0.0, 0, true, @math.Vec2D::zero(), RenderLayer::GameWorld)
+    }
+
+  let final_loop = get_or(loop_, animation.loop_)
+  let final_rate = get_or(rate, animation.rate)
+  let final_transform = get_or(transform, animation.transform)
+
   let frame = if !from_start && animation.id == current_anime.id {
     current_frame
   } else {
     0.0
   }
+
   let new_anime = {
     frames: animation.frames,
-    transform,
-    loop_,
-    rate,
+    loop_: final_loop,
+    rate: final_rate,
+    transform: final_transform,
     id: animation.id,
   }
+
+  // 【核心修正】创建 Sprite 时提供所有必须的字段
   sprites.set(entity, {
-    sprite_type: SpriteType::Animation(new_anime, frame~),
-    zindex,
-    visible,
-    offset,
+    sprite_type: Animation(new_anime, frame=frame),
+    zindex: zindex,
+    visible: visible,
+    offset: offset,
+    layer: get_or(layer, current_layer), // 优先使用新传入的 layer
   })
 }
 

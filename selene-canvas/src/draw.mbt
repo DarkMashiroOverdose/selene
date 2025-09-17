@@ -13,8 +13,21 @@
 // limitations under the License.
 
 ///|
+
+//本页面所有的self.context均改为self.active_context以支持分层渲染
 let element_cache : Map[String, @dom.HTMLImageElement] = Map::new()
 
+//设置渲染层级
+pub impl @system.Backend for CanvasBackend with set_render_target(
+  self,
+  target: String,
+) -> Unit {
+  match target {
+    "world" => self.active_context = self.context
+    "ui"    => self.active_context = self.ui_context
+    _       => () // 对于未知的 target，安全起见，不做任何操作
+  }
+}
 ///|
 fn get_image_element(png : String) -> @dom.HTMLImageElement {
   if element_cache.get(png) is Some(element) {
@@ -52,14 +65,14 @@ pub impl @system.Backend for CanvasBackend with draw_picture(
     RepeatX => "repeat-x"
     Repeat => "repeat"
   }
-  let pattern = self.context.create_pattern(
+  let pattern = self.active_context.create_pattern(
     @js.Union7::from0(element),
     repeat_mode,
   )
-  self.context.save()
-  self.context.set_fill_style(@js.Union3::from2(pattern))
-  self.context.translate(x, y)
-  self.context.transform(
+  self.active_context.save()
+  self.active_context.set_fill_style(@js.Union3::from2(pattern))
+  self.active_context.translate(x, y)
+  self.active_context.transform(
     transform.a,
     transform.b,
     transform.c,
@@ -67,8 +80,8 @@ pub impl @system.Backend for CanvasBackend with draw_picture(
     transform.tx,
     transform.ty,
   )
-  self.context.fill_rect(0, 0, width, height)
-  self.context.restore()
+  self.active_context.fill_rect(0, 0, width, height)
+  self.active_context.restore()
 }
 
 ///|
@@ -83,9 +96,9 @@ pub impl @system.Backend for CanvasBackend with draw_sprite(
   height~,
   transform~,
 ) {
-  self.context.save()
-  self.context.translate(x, y)
-  self.context.transform(
+  self.active_context.save()
+  self.active_context.translate(x, y)
+  self.active_context.transform(
     transform.a,
     transform.b,
     transform.c,
@@ -94,7 +107,7 @@ pub impl @system.Backend for CanvasBackend with draw_sprite(
     transform.ty,
   )
   let element = get_image_element(sprite_path)
-  self.context.draw_image_with_src_and_dst_size(
+  self.active_context.draw_image_with_src_and_dst_size(
     element |> @js.Value::cast_from |> @js.Value::cast,
     offset_x,
     offset_y,
@@ -105,7 +118,7 @@ pub impl @system.Backend for CanvasBackend with draw_sprite(
     width,
     height,
   )
-  self.context.restore()
+  self.active_context.restore()
 }
 
 ///|
@@ -117,10 +130,10 @@ pub impl @system.Backend for CanvasBackend with draw_stroke_rect(
   height~,
   color~,
 ) {
-  self.context.save()
-  self.context.set_stroke_style(@js.Union3::from0(color))
-  self.context.stroke_rect(x, y, width, height)
-  self.context.restore()
+  self.active_context.save()
+  self.active_context.set_stroke_style(@js.Union3::from0(color))
+  self.active_context.stroke_rect(x, y, width, height)
+  self.active_context.restore()
 }
 
 ///|
@@ -132,11 +145,11 @@ pub impl @system.Backend for CanvasBackend with draw_text(
   font~,
   color~,
 ) {
-  self.context.save()
-  self.context.set_font(font)
-  self.context.set_fill_style(@js.Union3::from0(color))
-  self.context.fill_text(text, x, y)
-  self.context.restore()
+  self.active_context.save()
+  self.active_context.set_font(font)
+  self.active_context.set_fill_style(@js.Union3::from0(color))
+  self.active_context.fill_text(text, x, y)
+  self.active_context.restore()
 }
 
 ///|
@@ -148,10 +161,10 @@ pub impl @system.Backend for CanvasBackend with draw_color_rect(
   height~,
   color~,
 ) {
-  self.context.save()
-  self.context.set_fill_style(@js.Union3::from0(color))
-  self.context.fill_rect(x, y, width, height)
-  self.context.restore()
+  self.active_context.save()
+  self.active_context.set_fill_style(@js.Union3::from0(color))
+  self.active_context.fill_rect(x, y, width, height)
+  self.active_context.restore()
 }
 
 ///|
@@ -164,8 +177,8 @@ pub impl @system.Backend for CanvasBackend with draw_gradient_rect(
   color_start~,
   color_end~,
 ) {
-  self.context.save()
-  let gradient = self.context.create_linear_gradient(
+  self.active_context.save()
+  let gradient = self.active_context.create_linear_gradient(
     x,
     y,
     x + width,
@@ -173,7 +186,7 @@ pub impl @system.Backend for CanvasBackend with draw_gradient_rect(
   )
   gradient.add_color_stop(0.0, color_start)
   gradient.add_color_stop(1.0, color_end)
-  self.context.set_fill_style(@js.Union3::from1(gradient))
-  self.context.fill_rect(x, y, width, height)
-  self.context.restore()
+  self.active_context.set_fill_style(@js.Union3::from1(gradient))
+  self.active_context.fill_rect(x, y, width, height)
+  self.active_context.restore()
 }
