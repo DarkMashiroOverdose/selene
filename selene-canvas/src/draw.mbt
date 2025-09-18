@@ -133,7 +133,8 @@ pub impl @system.Backend for CanvasBackend with draw_stroke_rect(
   self.active_context.save()
   self.active_context.set_stroke_style(@js.Union3::from0(color))
   self.active_context.stroke_rect(x, y, width, height)
-  self.active_context.restore()
+  self.active_context.restore() 
+  self.active_context.stroke() 
 }
 
 ///|
@@ -188,5 +189,72 @@ pub impl @system.Backend for CanvasBackend with draw_gradient_rect(
   gradient.add_color_stop(1.0, color_end)
   self.active_context.set_fill_style(@js.Union3::from1(gradient))
   self.active_context.fill_rect(x, y, width, height)
+  self.active_context.restore()
+}
+//画圆形
+pub impl @system.Backend for CanvasBackend with draw_filled_circle(
+  self,
+  x~,
+  y~,
+  radius~,
+  color~,
+) {
+  self.active_context.save()
+  self.active_context.begin_path()
+  self.active_context.arc(x, y, radius, 0.0, 6.28318530718) 
+  self.active_context.set_fill_style(@js.Union3::from0(color))
+  self.active_context.fill() 
+  self.active_context.restore()
+}
+//画圆框
+pub impl @system.Backend for CanvasBackend with draw_stroke_circle(
+  self,
+  x~,
+  y~,
+  radius~,
+  color~,
+  line_width~,
+) {
+  self.active_context.save()
+  self.active_context.begin_path() // 开始一条新的路径
+  self.active_context.arc(x, y, radius, 0.0, 6.28318530718)
+  self.active_context.set_stroke_style(@js.Union3::from0(color))
+  self.active_context.set_line_width(line_width)
+  self.active_context.stroke() // 用指定的颜色和宽度描边路径
+  self.active_context.restore()
+}
+//画椭圆
+pub impl @system.Backend for CanvasBackend with draw_filled_ellipse(
+  self,
+  x~, y~, radius_x~, radius_y~, rotation~, color~,
+) {
+  self.active_context.save()
+  self.active_context.begin_path()
+  self.active_context.ellipse(x, y, radius_x, radius_y, rotation, 0.0, 6.28318530718)
+  self.active_context.set_fill_style(@js.Union3::from0(color))
+  self.active_context.fill()
+  self.active_context.restore()
+}
+//画椭圆框
+pub impl @system.Backend for CanvasBackend with draw_stroke_ellipse(
+  self,
+  x~, y~, radius_x~, radius_y~, rotation~, color~, line_width~,
+) {
+  self.active_context.save()
+  self.active_context.begin_path()
+  self.active_context.ellipse(x, y, radius_x, radius_y, rotation, 0.0, 6.28318530718)
+  self.active_context.set_stroke_style(@js.Union3::from0(color))
+  self.active_context.set_line_width(line_width)
+  self.active_context.stroke()
+  self.active_context.restore()
+}
+//画方框
+pub impl @system.Backend for CanvasBackend with draw_rect_outline(
+  self, x~, y~, width~, height~, color~, line_width~,
+) {
+  self.active_context.save()
+  self.active_context.set_stroke_style(@js.Union3::from0(color))
+  self.active_context.set_line_width(line_width)
+  self.active_context.stroke_rect(x, y, width, height)
   self.active_context.restore()
 }

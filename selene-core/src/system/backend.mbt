@@ -122,4 +122,55 @@ pub(open) trait Backend {
   preload_audio(Self, path : String) -> Unit
 
   set_render_target(Self, target: String) -> Unit
+  //绘制一个方框
+  draw_rect_outline( 
+    Self,
+    x~: Double,
+    y~: Double,
+    width~: Double,
+    height~: Double,
+    color~: String,
+    line_width~: Double,
+  ) -> Unit
+  //绘制一个实心圆形
+  draw_filled_circle(
+    Self,
+    x~: Double,           //圆心 X 坐标
+    y~: Double,           //圆心 Y 坐标
+    radius~: Double,      //半径
+    color~: String,       //填充颜色
+  ) -> Unit
+
+  //绘制一个圆形边框（圆环）
+  draw_stroke_circle(
+    Self,
+    x~: Double,           //圆心 X 坐标
+    y~: Double,           //圆心 Y 坐标
+    radius~: Double,      //半径
+    color~: String,       //边框颜色
+    line_width~: Double,  //边框宽度
+  ) -> Unit
+
+  //绘制一个椭圆
+  draw_filled_ellipse(
+    Self,
+    x~: Double,           // 椭圆中心 X 坐标
+    y~: Double,           // 椭圆中心 Y 坐标
+    radius_x~: Double,    // 横向半径
+    radius_y~: Double,    // 纵向半径
+    rotation~: Double,    // 旋转角度（弧度制）
+    color~: String,       // 填充颜色
+  ) -> Unit
+
+  //绘制一个椭圆边框（椭圆环）
+  draw_stroke_ellipse(
+    Self,
+    x~: Double,           // 椭圆中心 X 坐标
+    y~: Double,           // 椭圆中心 Y 坐标
+    radius_x~: Double,    // 横向半径
+    radius_y~: Double,    // 纵向半径
+    rotation~: Double,    // 旋转角度（弧度制）
+    color~: String,       // 边框颜色
+    line_width~: Double, // 边框宽度
+  ) -> Unit
 }

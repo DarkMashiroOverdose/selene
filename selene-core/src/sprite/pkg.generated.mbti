@@ -48,6 +48,19 @@ pub(all) struct ColorRect {
 }
 fn ColorRect::new(@math.Vec2D, String) -> Self
 
+pub struct ColoredShape {
+  shape : Shape
+  style : DrawStyle
+}
+fn ColoredShape::new(Shape, DrawStyle) -> Self
+
+pub enum DrawStyle {
+  Fill(String)
+  Stroke(String, Double)
+}
+fn DrawStyle::fill(String) -> Self
+fn DrawStyle::stroke(String, Double) -> Self
+
 pub(all) struct Picture {
   size : @math.Vec2D
   tile_path : String
@@ -65,6 +78,15 @@ fn RenderLayer::ui() -> Self
 impl Eq for RenderLayer
 impl Show for RenderLayer
 
+pub enum Shape {
+  Rect(Double, Double)
+  Circle(Double)
+  Ellipse(Double, Double, Double)
+}
+fn Shape::circle(Double) -> Self
+fn Shape::ellipse(Double, Double, Double) -> Self
+fn Shape::rect(Double, Double) -> Self
+
 pub(all) struct Sprite {
   sprite_type : SpriteType
   zindex : Int
@@ -75,6 +97,7 @@ pub(all) struct Sprite {
 fn Sprite::from_animation(Animation, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 fn Sprite::from_color_rect(ColorRect, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 fn Sprite::from_picture(Picture, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
+fn Sprite::from_shape(ColoredShape, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 fn Sprite::from_text(Text, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 
 pub enum SpriteType {
@@ -82,6 +105,7 @@ pub enum SpriteType {
   Animation(Animation, mut frame~ : Double)
   Text(Text)
   ColorRect(ColorRect)
+  ColoredShape(ColoredShape)
 }
 
 pub(all) struct Text {

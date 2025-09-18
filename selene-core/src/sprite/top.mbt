@@ -82,6 +82,7 @@ pub enum SpriteType {
   Animation(Animation, mut frame~ : Double)
   Text(Text)
   ColorRect(ColorRect)
+  ColoredShape(ColoredShape)  //添加渲染形状的定义
 }
 
 ///|
@@ -148,6 +149,21 @@ pub fn Sprite::from_color_rect(
     layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
   }
 }
+//指定绘制图案
+pub fn Sprite::from_shape(
+  shape: ColoredShape,
+  zindex: Int,
+  offset?: @math.Vec2D,
+  layer?: RenderLayer,
+) -> Sprite {
+  {
+    sprite_type: SpriteType::ColoredShape(shape),
+    zindex,
+    visible: true,
+    offset: get_or(offset, @math.Vec2D::zero()),
+    layer: get_or(layer, RenderLayer::GameWorld),
+  }
+}
 
 ///|
 /// Renders all sprites in the game world through the provided backend, handling
@@ -189,6 +205,7 @@ pub fn render_sprite_system(backend : &@system.Backend) -> Unit {
     } else {
       pos.0
     }
+    let final_pos = pos + sprite.offset
     match sprite.sprite_type {
       SpriteType::Picture(picture) if sprite.visible =>
         render_picture(backend, picture, pos + sprite.offset)
@@ -206,6 +223,8 @@ pub fn render_sprite_system(backend : &@system.Backend) -> Unit {
         render_text(backend, text, pos + sprite.offset)
       SpriteType::ColorRect(color_rect) if sprite.visible =>
         render_color_rect(backend, color_rect, pos + sprite.offset)
+      SpriteType::ColoredShape(shape) =>
+        render_colored_shape(backend, shape, final_pos)
       _ => ()
     }
   }
@@ -286,6 +305,8 @@ fn render_sprite(backend: &@system.Backend, e : @system.Entity, sprite: Sprite, 
             render_text(backend, text, final_pos)
         ColorRect(color_rect) =>
             render_color_rect(backend, color_rect, final_pos)
+        ColoredShape(shape) => 
+            render_colored_shape(backend, shape, final_pos)
     }
 }
 
