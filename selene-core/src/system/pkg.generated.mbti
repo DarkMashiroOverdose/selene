@@ -189,10 +189,13 @@ pub(open) trait Backend {
   preload_img(Self, String) -> Unit
   preload_audio(Self, String) -> Unit
   set_render_target(Self, String) -> Unit
-  draw_rect_outline(Self, x~ : Double, y~ : Double, width~ : Double, height~ : Double, color~ : String, line_width~ : Double) -> Unit
+  draw_filled_rect(Self, x~ : Double, y~ : Double, width~ : Double, height~ : Double, color~ : String, rotation~ : Double) -> Unit
+  draw_rect_outline(Self, x~ : Double, y~ : Double, width~ : Double, height~ : Double, color~ : String, line_width~ : Double, rotation~ : Double) -> Unit
   draw_filled_circle(Self, x~ : Double, y~ : Double, radius~ : Double, color~ : String) -> Unit
   draw_stroke_circle(Self, x~ : Double, y~ : Double, radius~ : Double, color~ : String, line_width~ : Double) -> Unit
   draw_filled_ellipse(Self, x~ : Double, y~ : Double, radius_x~ : Double, radius_y~ : Double, rotation~ : Double, color~ : String) -> Unit
   draw_stroke_ellipse(Self, x~ : Double, y~ : Double, radius_x~ : Double, radius_y~ : Double, rotation~ : Double, color~ : String, line_width~ : Double) -> Unit
+  draw_filled_triangle(Self, x~ : Double, y~ : Double, side~ : Double, rotation~ : Double, color~ : String) -> Unit
+  draw_stroke_triangle(Self, x~ : Double, y~ : Double, side~ : Double, rotation~ : Double, color~ : String, line_width~ : Double) -> Unit
 }
 

@@ -67,7 +67,7 @@ pub fn App::new(backend : &Backend) -> App {
     canvas_height: DEFAULT_CANVAS_HEIGHT,
     canvas_width: DEFAULT_CANVAS_WIDTH,
     zoom: 1.0,
-    image_smooth: true,
+    image_smooth: false,
     fps: DEFAULT_FPS,
     systems: [],
     plugins: [],

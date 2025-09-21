@@ -13,7 +13,10 @@
 // limitations under the License.
 
 ///|
-
+extern "js" fn sqrt(x: Double) -> Double = "(x) => Math.sqrt(x)"
+extern "js" fn sin(x: Double) -> Double = "(x) => Math.sin(x)"
+extern "js" fn cos(x: Double) -> Double = "(x) => Math.cos(x)"
+let pi = 3.141592653589793
 //本页面所有的self.context均改为self.active_context以支持分层渲染
 let element_cache : Map[String, @dom.HTMLImageElement] = Map::new()
 
@@ -248,13 +251,79 @@ pub impl @system.Backend for CanvasBackend with draw_stroke_ellipse(
   self.active_context.stroke()
   self.active_context.restore()
 }
-//画方框
-pub impl @system.Backend for CanvasBackend with draw_rect_outline(
-  self, x~, y~, width~, height~, color~, line_width~,
+//画实心方形
+pub impl @system.Backend for CanvasBackend with draw_filled_rect(
+  self, x~, y~, width~, height~, color~, rotation~,
 ) {
   self.active_context.save()
+  self.active_context.translate(x + width / 2.0, y + height / 2.0)
+  self.active_context.rotate(rotation)
+  
+  self.active_context.set_fill_style(@js.Union3::from0(color))
+  self.active_context.fill_rect(width / -2.0, height / -2.0, width, height)
+
+  self.active_context.restore()
+}
+//画方框
+pub impl @system.Backend for CanvasBackend with draw_rect_outline(
+  self, x~, y~, width~, height~, color~, line_width~, rotation~,
+) {
+  self.active_context.save()
+  self.active_context.translate(x + width / 2.0, y + height / 2.0)
+  self.active_context.rotate(rotation)
+
   self.active_context.set_stroke_style(@js.Union3::from0(color))
   self.active_context.set_line_width(line_width)
-  self.active_context.stroke_rect(x, y, width, height)
+  self.active_context.stroke_rect(width / -2.0, height / -2.0, width, height)
+
+  self.active_context.restore()
+}
+pub impl @system.Backend for CanvasBackend with draw_filled_triangle(
+  self, x~, y~, side~, rotation~, color~,
+) {
+  let r = side / sqrt(3.0) 
+
+  let p1_x = x + r * cos(rotation)
+  let p1_y = y + r * sin(rotation)
+
+  let p2_x = x + r * cos(rotation + 2.0 * pi / 3.0)
+  let p2_y = y + r * sin(rotation + 2.0 * pi / 3.0)
+  
+  let p3_x = x + r * cos(rotation + 4.0 * pi / 3.0)
+  let p3_y = y + r * sin(rotation + 4.0 * pi / 3.0)
+
+  self.active_context.save()
+  self.active_context.begin_path()
+  self.active_context.move_to(p1_x, p1_y)
+  self.active_context.line_to(p2_x, p2_y)
+  self.active_context.line_to(p3_x, p3_y)
+  self.active_context.close_path()
+  self.active_context.set_fill_style(@js.Union3::from0(color))
+  self.active_context.fill()
+  self.active_context.restore()
+}
+
+pub impl @system.Backend for CanvasBackend with draw_stroke_triangle(
+  self, x~, y~, side~, rotation~, color~, line_width~,
+) {
+  // 1. 计算顶点 (逻辑和上面一样)
+  let r = side / sqrt(3.0)
+  let p1_x = x + r * cos(rotation)
+  let p1_y = y + r * sin(rotation)
+  let p2_x = x + r * cos(rotation + 2.0 * pi / 3.0)
+  let p2_y = y + r * sin(rotation + 2.0 * pi / 3.0)
+  let p3_x = x + r * cos(rotation + 4.0 * pi / 3.0)
+  let p3_y = y + r * sin(rotation + 4.0 * pi / 3.0)
+
+  // 2. 描边路径 (逻辑不变)
+  self.active_context.save()
+  self.active_context.begin_path()
+  self.active_context.move_to(p1_x, p1_y)
+  self.active_context.line_to(p2_x, p2_y)
+  self.active_context.line_to(p3_x, p3_y)
+  self.active_context.close_path()
+  self.active_context.set_stroke_style(@js.Union3::from0(color))
+  self.active_context.set_line_width(line_width)
+  self.active_context.stroke()
   self.active_context.restore()
 }

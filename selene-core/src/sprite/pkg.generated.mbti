@@ -79,13 +79,15 @@ impl Eq for RenderLayer
 impl Show for RenderLayer
 
 pub enum Shape {
-  Rect(Double, Double)
+  Rect(Double, Double, Double)
   Circle(Double)
   Ellipse(Double, Double, Double)
+  Triangle(Double, Double)
 }
 fn Shape::circle(Double) -> Self
 fn Shape::ellipse(Double, Double, Double) -> Self
-fn Shape::rect(Double, Double) -> Self
+fn Shape::rect(Double, Double, Double) -> Self
+fn Shape::triangle(Double, Double) -> Self
 
 pub(all) struct Sprite {
   sprite_type : SpriteType
