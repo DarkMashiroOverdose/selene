@@ -71,6 +71,7 @@ pub(all) struct Sprite {
   mut visible : Bool
   offset : @math.Vec2D
   layer: RenderLayer //添加渲染层级的定义
+  mut transform: @math.Transform
 }
 
 ///|
@@ -79,7 +80,7 @@ pub let sprites : Map[@system.Entity, Sprite] = Map::new()
 ///|
 pub enum SpriteType {
   Picture(Picture)
-  Animation(Animation, mut frame~ : Double)
+  Animation(Animation, frame~ : Double)
   Text(Text)
   ColorRect(ColorRect)
   ColoredShape(ColoredShape)  //添加渲染形状的定义
@@ -99,6 +100,7 @@ pub fn Sprite::from_animation(
     offset,
     visible: true,
     layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
+    transform: @math.Transform::new(), 
   }
 }
 
@@ -115,6 +117,7 @@ pub fn Sprite::from_picture(
     offset, 
     visible: true,
     layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
+    transform: @math.Transform::new(), 
   }
 }
 
@@ -131,6 +134,7 @@ pub fn Sprite::from_text(
     offset, 
     visible: true,
     layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
+    transform: @math.Transform::new(), 
   }
 }
 
@@ -147,6 +151,7 @@ pub fn Sprite::from_color_rect(
     offset,
     visible: true,
     layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
+    transform: @math.Transform::new(), 
   }
 }
 //指定绘制图案
@@ -162,6 +167,7 @@ pub fn Sprite::from_shape(
     visible: true,
     offset: get_or(offset, @math.Vec2D::zero()),
     layer: get_or(layer, RenderLayer::GameWorld),
+    transform: @math.Transform::new(), 
   }
 }
 
@@ -178,8 +184,8 @@ pub fn Sprite::from_shape(
 /// 
 //保存原有的渲染顺序逻辑，以便兼容旧项目
 pub fn render_sprite_system(backend : &@system.Backend) -> Unit {
-  let sprites = sprites.to_array().filter(fn(pair) { pair.0.is_alive() })
-  sprites.sort_by(fn(sprite1, sprite2) {
+  let all_sprites  = sprites.to_array().filter(fn(pair) { pair.0.is_alive() })
+  all_sprites .sort_by(fn(sprite1, sprite2) {
     if sprite1.1.zindex < sprite2.1.zindex {
       -1
     } else if sprite1.1.zindex > sprite2.1.zindex {
@@ -196,35 +202,37 @@ pub fn render_sprite_system(backend : &@system.Backend) -> Unit {
       }
     }
   })
-  for sprite in sprites {
-    let e = sprite.0
-    let sprite = sprite.1
+  for entry  in all_sprites  {
+    let e = entry.0
+    let sprite = entry.1
     guard @position.positions.get(e) is Some(pos) else { continue }
-    let pos = if @ui.uis.get(e) is None {
+    let render_pos  = if @ui.uis.get(e) is None {
       pos.0 - @camera.get_position()
     } else {
       pos.0
     }
-    let final_pos = pos + sprite.offset
+    let final_pos = render_pos + sprite.offset
     match sprite.sprite_type {
       SpriteType::Picture(picture) if sprite.visible =>
-        render_picture(backend, picture, pos + sprite.offset)
-      SpriteType::Animation(anime, frame~) as animation_sprite => {
+        render_picture(backend, picture, final_pos, sprite.transform)
+      SpriteType::Animation(anime, frame~) => {
         let new_frame = render_animation(
           backend,
           anime,
           frame,
-          pos + sprite.offset,
+          final_pos,
           sprite.visible,
+          sprite.transform,
         )
-        animation_sprite.frame = new_frame
+        let new_sprite_type = SpriteType::Animation(anime, frame=new_frame)
+        sprites.set(e, {..sprite, sprite_type: new_sprite_type})
       }
       SpriteType::Text(text) if sprite.visible =>
-        render_text(backend, text, pos + sprite.offset)
+        render_text(backend, text, final_pos, sprite.transform)
       SpriteType::ColorRect(color_rect) if sprite.visible =>
-        render_color_rect(backend, color_rect, pos + sprite.offset)
+        render_color_rect(backend, color_rect, final_pos)
       SpriteType::ColoredShape(shape) =>
-        render_colored_shape(backend, shape, final_pos)
+        render_colored_shape(backend, shape, final_pos, sprite.transform)
       _ => ()
     }
   }
@@ -290,23 +298,22 @@ pub fn render_ui_system(backend: &@system.Backend) -> Unit {
     }
 }
 //通用渲染逻辑
-fn render_sprite(backend: &@system.Backend, e : @system.Entity, sprite: Sprite, pos: @math.Vec2D) -> Unit {
+fn render_sprite(backend: &@system.Backend, e: @system.Entity, sprite: Sprite, pos: @math.Vec2D) -> Unit {
     if !sprite.visible { return }
     let final_pos = pos + sprite.offset
     match sprite.sprite_type {
         Picture(picture) =>
-            render_picture(backend, picture, final_pos)
+            render_picture(backend, picture, final_pos, sprite.transform)
         Animation(anime, frame~) => {
-            let new_frame = render_animation(backend, anime, frame, final_pos, true)
+            let new_frame = render_animation(backend, anime, frame, final_pos, true, sprite.transform)
             let new_sprite_type = SpriteType::Animation(anime, frame=new_frame)
             sprites.set(e, {..sprite, sprite_type: new_sprite_type})
         }
         Text(text) =>
-            render_text(backend, text, final_pos)
+            render_text(backend, text, final_pos, sprite.transform)
         ColorRect(color_rect) =>
             render_color_rect(backend, color_rect, final_pos)
         ColoredShape(shape) => 
-            render_colored_shape(backend, shape, final_pos)
+            render_colored_shape(backend, shape, final_pos, sprite.transform)
     }
 }
-

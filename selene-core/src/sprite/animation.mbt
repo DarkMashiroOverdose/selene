@@ -297,28 +297,24 @@ pub fn play_animation(
   from_start?: Bool,
   loop_?: Bool,
   rate?: Double,
-  transform?: @math.Transform,
-  layer? : RenderLayer,
+  layer?: RenderLayer,
 ) -> Unit {
   let from_start = get_or(from_start, false)
 
-  let (current_anime, current_frame, zindex, visible, offset, current_layer) =
+  let (current_anime, current_frame, zindex, visible, offset, current_layer, current_transform) =
     if sprites.get(entity) is Some(sprite) {
       if sprite.sprite_type is Animation(anime, frame~) {
-        (anime, frame, sprite.zindex, sprite.visible, sprite.offset, sprite.layer)
+        (anime, frame, sprite.zindex, sprite.visible, sprite.offset, sprite.layer, sprite.transform)
       } else {
-        // 如果实体之前不是动画精灵，则使用默认值
-        (animation, 0.0, sprite.zindex, sprite.visible, sprite.offset, sprite.layer)
+        (animation, 0.0, sprite.zindex, sprite.visible, sprite.offset, sprite.layer, sprite.transform)
       }
     } else {
-      // 如果实体之前没有精灵组件，则使用全新默认值
-      (animation, 0.0, 0, true, @math.Vec2D::zero(), RenderLayer::GameWorld)
+      (animation, 0.0, 0, true, @math.Vec2D::zero(), RenderLayer::game_world(), @math.Transform::new())
     }
 
   let final_loop = get_or(loop_, animation.loop_)
   let final_rate = get_or(rate, animation.rate)
-  let final_transform = get_or(transform, animation.transform)
-
+  
   let frame = if !from_start && animation.id == current_anime.id {
     current_frame
   } else {
@@ -329,17 +325,17 @@ pub fn play_animation(
     frames: animation.frames,
     loop_: final_loop,
     rate: final_rate,
-    transform: final_transform,
+    transform: animation.transform, 
     id: animation.id,
   }
 
-  // 【核心修正】创建 Sprite 时提供所有必须的字段
   sprites.set(entity, {
     sprite_type: Animation(new_anime, frame=frame),
     zindex: zindex,
     visible: visible,
     offset: offset,
-    layer: get_or(layer, current_layer), // 优先使用新传入的 layer
+    layer: get_or(layer, current_layer),
+    transform: current_transform,
   })
 }
 
@@ -360,9 +356,11 @@ fn render_animation(
   current_frame : Double,
   pos : @math.Vec2D,
   visible : Bool,
+  entity_transform: @math.Transform,
 ) -> Double {
   let frame = animation.frames[current_frame.to_int()]
   if visible {
+    let final_transform = entity_transform.mul(animation.transform)
     backend.draw_sprite(
       frame.sprite_path,
       x=pos[X],
@@ -371,7 +369,7 @@ fn render_animation(
       offset_y=frame.offset[Y],
       width=frame.size[X],
       height=frame.size[Y],
-      transform=animation.transform,
+      transform=final_transform,
     )
   }
   let mut new_frame = current_frame + animation.rate

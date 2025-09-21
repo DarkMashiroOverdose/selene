@@ -88,6 +88,7 @@ pub(open) trait Backend {
     width~ : Double,
     height~ : Double,
     color~ : String,
+    transform~: @math.Transform,
   ) -> Unit
   draw_text(
     Self,
@@ -96,6 +97,7 @@ pub(open) trait Backend {
     y~ : Double,
     font~ : String,
     color~ : String,
+    transform~: @math.Transform,
   ) -> Unit
   draw_color_rect(
     Self,
@@ -131,6 +133,7 @@ pub(open) trait Backend {
     height~ : Double,
     color~ : String,
     rotation~: Double, // <-- 新增
+    transform~: @math.Transform,
   ) -> Unit
   //绘制一个方框
   draw_rect_outline( 
@@ -142,6 +145,7 @@ pub(open) trait Backend {
     color~: String,
     line_width~: Double,
     rotation~: Double, // <-- 新增
+    transform~: @math.Transform,
   ) -> Unit
   //绘制一个实心圆形
   draw_filled_circle(
@@ -150,6 +154,7 @@ pub(open) trait Backend {
     y~: Double,           //圆心 Y 坐标
     radius~: Double,      //半径
     color~: String,       //填充颜色
+    transform~: @math.Transform,
   ) -> Unit
 
   //绘制一个圆形边框（圆环）
@@ -160,6 +165,7 @@ pub(open) trait Backend {
     radius~: Double,      //半径
     color~: String,       //边框颜色
     line_width~: Double,  //边框宽度
+    transform~: @math.Transform,
   ) -> Unit
 
   //绘制一个椭圆
@@ -171,6 +177,7 @@ pub(open) trait Backend {
     radius_y~: Double,    // 纵向半径
     rotation~: Double,    // 旋转角度（弧度制）
     color~: String,       // 填充颜色
+    transform~: @math.Transform,
   ) -> Unit
 
   //绘制一个椭圆边框（椭圆环）
@@ -183,6 +190,7 @@ pub(open) trait Backend {
     rotation~: Double,    // 旋转角度（弧度制）
     color~: String,       // 边框颜色
     line_width~: Double, // 边框宽度
+    transform~: @math.Transform,
   ) -> Unit
   //实心的等边三角形
   draw_filled_triangle(
@@ -192,6 +200,7 @@ pub(open) trait Backend {
     side~: Double,        // 边长
     rotation~: Double,    // 旋转角度（弧度制）
     color~: String,        // 填充颜色
+    transform~: @math.Transform,
   ) -> Unit
 
   //等边三角形边框
@@ -203,5 +212,6 @@ pub(open) trait Backend {
     rotation~: Double,    // 旋转角度（弧度制）
     color~: String,        // 边框颜色
     line_width~: Double, // 边框宽度
+    transform~: @math.Transform,
   ) -> Unit
 }

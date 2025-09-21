@@ -126,30 +126,24 @@ pub impl @system.Backend for CanvasBackend with draw_sprite(
 
 ///|
 pub impl @system.Backend for CanvasBackend with draw_stroke_rect(
-  self,
-  x~,
-  y~,
-  width~,
-  height~,
-  color~,
+  self, x~, y~, width~, height~, color~, transform~,
 ) {
   self.active_context.save()
-  self.active_context.set_stroke_style(@js.Union3::from0(color))
-  self.active_context.stroke_rect(x, y, width, height)
-  self.active_context.restore() 
-  self.active_context.stroke() 
+  
+  self.active_context.translate(x + width / 2.0, y + height / 2.0)
+  self.active_context.rotate(0.0)
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty)
+  
+  self.active_context.set_fill_style(@js.Union3::from0(color))
+  self.active_context.fill_rect(width / -2.0, height / -2.0, width, height)
+  self.active_context.restore()
 }
-
 ///|
 pub impl @system.Backend for CanvasBackend with draw_text(
-  self,
-  text,
-  x~,
-  y~,
-  font~,
-  color~,
+  self, text, x~, y~, font~, color~, transform~,
 ) {
   self.active_context.save()
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty)
   self.active_context.set_font(font)
   self.active_context.set_fill_style(@js.Union3::from0(color))
   self.active_context.fill_text(text, x, y)
@@ -201,8 +195,10 @@ pub impl @system.Backend for CanvasBackend with draw_filled_circle(
   y~,
   radius~,
   color~,
+  transform~,
 ) {
   self.active_context.save()
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty)
   self.active_context.begin_path()
   self.active_context.arc(x, y, radius, 0.0, 6.28318530718) 
   self.active_context.set_fill_style(@js.Union3::from0(color))
@@ -217,82 +213,100 @@ pub impl @system.Backend for CanvasBackend with draw_stroke_circle(
   radius~,
   color~,
   line_width~,
+  transform~,
 ) {
   self.active_context.save()
-  self.active_context.begin_path() // 开始一条新的路径
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty)
+  self.active_context.begin_path()
   self.active_context.arc(x, y, radius, 0.0, 6.28318530718)
   self.active_context.set_stroke_style(@js.Union3::from0(color))
   self.active_context.set_line_width(line_width)
-  self.active_context.stroke() // 用指定的颜色和宽度描边路径
+  self.active_context.stroke()
   self.active_context.restore()
 }
 //画椭圆
 pub impl @system.Backend for CanvasBackend with draw_filled_ellipse(
-  self,
-  x~, y~, radius_x~, radius_y~, rotation~, color~,
+    self, x~, y~, radius_x~, radius_y~, rotation~, color~, transform~,
 ) {
-  self.active_context.save()
-  self.active_context.begin_path()
-  self.active_context.ellipse(x, y, radius_x, radius_y, rotation, 0.0, 6.28318530718)
-  self.active_context.set_fill_style(@js.Union3::from0(color))
-  self.active_context.fill()
-  self.active_context.restore()
+
+    self.active_context.save();
+    self.active_context.translate(x, y);
+    self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty); // 2. 应用动态变换
+    self.active_context.rotate(rotation);
+
+    self.active_context.begin_path();
+    self.active_context.ellipse(0.0, 0.0, radius_x, radius_y, 0.0, 0.0, 2.0 * pi);
+    
+    self.active_context.set_fill_style(@js.Union3::from0(color));
+    self.active_context.fill();
+    self.active_context.restore();
 }
-//画椭圆框
+
+// 描边椭圆 (最终修正版)
 pub impl @system.Backend for CanvasBackend with draw_stroke_ellipse(
-  self,
-  x~, y~, radius_x~, radius_y~, rotation~, color~, line_width~,
+    self, x~, y~, radius_x~, radius_y~, rotation~, color~, line_width~, transform~,
 ) {
-  self.active_context.save()
-  self.active_context.begin_path()
-  self.active_context.ellipse(x, y, radius_x, radius_y, rotation, 0.0, 6.28318530718)
-  self.active_context.set_stroke_style(@js.Union3::from0(color))
-  self.active_context.set_line_width(line_width)
-  self.active_context.stroke()
-  self.active_context.restore()
+
+    self.active_context.save();
+    self.active_context.translate(x, y);
+    self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+    self.active_context.rotate(rotation); // 【修正】应用画布旋转
+
+    self.active_context.begin_path();
+    // 【修正】在(0,0)处画一个【无自身旋转】的椭圆
+    self.active_context.ellipse(0.0, 0.0, radius_x, radius_y, 0.0, 0.0, 2.0 * pi);
+    
+    self.active_context.set_stroke_style(@js.Union3::from0(color));
+    self.active_context.set_line_width(line_width);
+    self.active_context.stroke();
+    self.active_context.restore();
 }
 //画实心方形
 pub impl @system.Backend for CanvasBackend with draw_filled_rect(
-  self, x~, y~, width~, height~, color~, rotation~,
+  self, x~, y~, width~, height~, color~, rotation~, transform~,
 ) {
-  self.active_context.save()
-  self.active_context.translate(x + width / 2.0, y + height / 2.0)
-  self.active_context.rotate(rotation)
   
-  self.active_context.set_fill_style(@js.Union3::from0(color))
-  self.active_context.fill_rect(width / -2.0, height / -2.0, width, height)
-
-  self.active_context.restore()
+    self.active_context.save();
+    self.active_context.translate(x + width / 2.0, y + height / 2.0);
+    self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+    self.active_context.rotate(rotation);
+    self.active_context.set_fill_style(@js.Union3::from0(color));
+    self.active_context.fill_rect(-width / 2.0, -height / 2.0, width, height);
+    
+    self.active_context.restore();
 }
 //画方框
 pub impl @system.Backend for CanvasBackend with draw_rect_outline(
-  self, x~, y~, width~, height~, color~, line_width~, rotation~,
+    self, x~, y~, width~, height~, color~, line_width~, rotation~, transform~,
 ) {
-  self.active_context.save()
-  self.active_context.translate(x + width / 2.0, y + height / 2.0)
-  self.active_context.rotate(rotation)
+    self.active_context.save();
+    self.active_context.translate(x + width / 2.0, y + height / 2.0); 
+    self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty); 
+    self.active_context.rotate(rotation); 
 
-  self.active_context.set_stroke_style(@js.Union3::from0(color))
-  self.active_context.set_line_width(line_width)
-  self.active_context.stroke_rect(width / -2.0, height / -2.0, width, height)
-
-  self.active_context.restore()
+    self.active_context.set_stroke_style(@js.Union3::from0(color));
+    self.active_context.set_line_width(line_width);
+    self.active_context.stroke_rect(-width / 2.0, -height / 2.0, width, height);
+    
+    self.active_context.restore();
 }
 pub impl @system.Backend for CanvasBackend with draw_filled_triangle(
-  self, x~, y~, side~, rotation~, color~,
+  self, x~, y~, side~, rotation~, color~, transform~,
 ) {
+  self.active_context.save()
+  self.active_context.translate(x, y)
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty)
   let r = side / sqrt(3.0) 
 
-  let p1_x = x + r * cos(rotation)
-  let p1_y = y + r * sin(rotation)
+  let p1_x = r * cos(rotation)
+  let p1_y = r * sin(rotation)
 
-  let p2_x = x + r * cos(rotation + 2.0 * pi / 3.0)
-  let p2_y = y + r * sin(rotation + 2.0 * pi / 3.0)
+  let p2_x = r * cos(rotation + 2.0 * pi / 3.0)
+  let p2_y = r * sin(rotation + 2.0 * pi / 3.0)
   
-  let p3_x = x + r * cos(rotation + 4.0 * pi / 3.0)
-  let p3_y = y + r * sin(rotation + 4.0 * pi / 3.0)
+  let p3_x = r * cos(rotation + 4.0 * pi / 3.0)
+  let p3_y = r * sin(rotation + 4.0 * pi / 3.0)
 
-  self.active_context.save()
   self.active_context.begin_path()
   self.active_context.move_to(p1_x, p1_y)
   self.active_context.line_to(p2_x, p2_y)
@@ -300,30 +314,33 @@ pub impl @system.Backend for CanvasBackend with draw_filled_triangle(
   self.active_context.close_path()
   self.active_context.set_fill_style(@js.Union3::from0(color))
   self.active_context.fill()
+
   self.active_context.restore()
 }
-
 pub impl @system.Backend for CanvasBackend with draw_stroke_triangle(
-  self, x~, y~, side~, rotation~, color~, line_width~,
+  self, x~, y~, side~, rotation~, color~, line_width~, transform~,
 ) {
-  // 1. 计算顶点 (逻辑和上面一样)
-  let r = side / sqrt(3.0)
-  let p1_x = x + r * cos(rotation)
-  let p1_y = y + r * sin(rotation)
-  let p2_x = x + r * cos(rotation + 2.0 * pi / 3.0)
-  let p2_y = y + r * sin(rotation + 2.0 * pi / 3.0)
-  let p3_x = x + r * cos(rotation + 4.0 * pi / 3.0)
-  let p3_y = y + r * sin(rotation + 4.0 * pi / 3.0)
+    self.active_context.save();
+    self.active_context.translate(x, y);
+    self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
 
-  // 2. 描边路径 (逻辑不变)
-  self.active_context.save()
-  self.active_context.begin_path()
-  self.active_context.move_to(p1_x, p1_y)
-  self.active_context.line_to(p2_x, p2_y)
-  self.active_context.line_to(p3_x, p3_y)
-  self.active_context.close_path()
-  self.active_context.set_stroke_style(@js.Union3::from0(color))
-  self.active_context.set_line_width(line_width)
-  self.active_context.stroke()
-  self.active_context.restore()
+    let r = side / sqrt(3.0);
+    let p1_x = r * cos(rotation);
+    let p1_y = r * sin(rotation);
+    let p2_x = r * cos(rotation + 2.0 * pi / 3.0);
+    let p2_y = r * sin(rotation + 2.0 * pi / 3.0);
+    let p3_x = r * cos(rotation + 4.0 * pi / 3.0);
+    let p3_y = r * sin(rotation + 4.0 * pi / 3.0);
+
+    self.active_context.begin_path();
+    self.active_context.move_to(p1_x, p1_y);
+    self.active_context.line_to(p2_x, p2_y);
+    self.active_context.line_to(p3_x, p3_y);
+    self.active_context.close_path();
+
+    self.active_context.set_stroke_style(@js.Union3::from0(color));
+    self.active_context.set_line_width(line_width);
+    self.active_context.stroke();
+    
+    self.active_context.restore();
 }

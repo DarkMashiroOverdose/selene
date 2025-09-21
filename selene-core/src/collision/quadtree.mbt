@@ -137,6 +137,7 @@ pub fn quadtree_render_system(backend : &@system.Backend) -> Unit {
       width=size[X],
       height=size[Y],
       color="blue",
+      transform=@math.Transform::new(),
     )
     for child in node.children {
       render_node(child)

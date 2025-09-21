@@ -54,6 +54,7 @@ fn render_text(
   backend : &@system.Backend,
   text : Text,
   position : @math.Vec2D,
+  transform : @math.Transform
 ) -> Unit {
   backend.draw_text(
     text.content,
@@ -61,5 +62,6 @@ fn render_text(
     y=position[Y],
     font=text.font,
     color=text.color,
+    transform=transform,
   )
 }

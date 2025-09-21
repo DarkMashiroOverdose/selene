@@ -32,6 +32,7 @@ fn render_colored_shape(
   backend: &@system.Backend,
   graphic: ColoredShape,
   position: @math.Vec2D,
+  transform: @math.Transform, 
 ) -> Unit {
   match graphic.style {
     Fill(color) => {
@@ -40,18 +41,18 @@ fn render_colored_shape(
           backend.draw_filled_rect(
             x=position[X], y=position[Y], 
             width=width, height=height, 
-            color=color,rotation=rotation, 
+            color=color,rotation=rotation, transform=transform,
           )
         Circle(radius) => 
           backend.draw_filled_circle(
             x=position[X], y=position[Y], 
             radius=radius, 
-            color=color,
+            color=color,transform=transform,
           )
         Ellipse(radius_x, radius_y, rotation) => 
           backend.draw_filled_ellipse(
             x=position[X], y=position[Y], 
-            radius_x=radius_x, radius_y=radius_y, 
+            radius_x=radius_x, radius_y=radius_y, transform=transform,
             rotation=rotation, 
             color=color,
           )
@@ -61,7 +62,9 @@ fn render_colored_shape(
             y=position[Y], 
             side=side, 
             rotation=rotation, 
-            color=color
+            color=color, 
+            transform=transform,
+            
           )
       }
     }
@@ -71,20 +74,20 @@ fn render_colored_shape(
           backend.draw_rect_outline(
             x=position[X], y=position[Y], 
             width=width, height=height, 
-            color=color, line_width=line_width,rotation=rotation, 
+            color=color, line_width=line_width,rotation=rotation, transform=transform,
           )
         Circle(radius) => 
           backend.draw_stroke_circle(
             x=position[X], y=position[Y], 
             radius=radius, 
-            color=color, line_width=line_width,
+            color=color, line_width=line_width, transform=transform,
           )
         Ellipse(radius_x, radius_y, rotation) => 
           backend.draw_stroke_ellipse(
             x=position[X], y=position[Y], 
             radius_x=radius_x, radius_y=radius_y, 
             rotation=rotation, 
-            color=color, line_width=line_width,
+            color=color, line_width=line_width, transform=transform,
           )
         Triangle(side, rotation) =>
           backend.draw_stroke_triangle(x=position[X], 
@@ -92,7 +95,7 @@ fn render_colored_shape(
             side=side, 
             rotation=rotation, 
             color=color, 
-            line_width=line_width
+            line_width=line_width, transform=transform,
           )
       }
     }

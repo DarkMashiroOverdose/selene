@@ -13,7 +13,7 @@ fn[T] get_or(T?, T) -> T
 
 fn is_animation_finished(@system.Entity) -> Bool
 
-fn play_animation(@system.Entity, Animation, from_start? : Bool, loop_? : Bool, rate? : Double, transform? : @math.Transform, layer? : RenderLayer) -> Unit
+fn play_animation(@system.Entity, Animation, from_start? : Bool, loop_? : Bool, rate? : Double, layer? : RenderLayer) -> Unit
 
 fn render_sprite_system(&@system.Backend) -> Unit
 
@@ -95,6 +95,7 @@ pub(all) struct Sprite {
   mut visible : Bool
   offset : @math.Vec2D
   layer : RenderLayer
+  mut transform : @math.Transform
 }
 fn Sprite::from_animation(Animation, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 fn Sprite::from_color_rect(ColorRect, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
@@ -104,7 +105,7 @@ fn Sprite::from_text(Text, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> 
 
 pub enum SpriteType {
   Picture(Picture)
-  Animation(Animation, mut frame~ : Double)
+  Animation(Animation, frame~ : Double)
   Text(Text)
   ColorRect(ColorRect)
   ColoredShape(ColoredShape)

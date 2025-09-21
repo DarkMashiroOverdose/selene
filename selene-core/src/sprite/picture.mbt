@@ -95,7 +95,9 @@ fn render_picture(
   backend : &@system.Backend,
   picture : Picture,
   pos : @math.Vec2D,
+  sprite_transform: @math.Transform,
 ) -> Unit {
+  let final_transform = sprite_transform.mul(picture.transform)
   backend.draw_picture(
     picture.tile_path,
     x=pos[X],
@@ -103,6 +105,6 @@ fn render_picture(
     width=picture.size[X],
     height=picture.size[Y],
     repeat=picture.repeat,
-    transform=picture.transform,
+    transform=final_transform, 
   )
 }
