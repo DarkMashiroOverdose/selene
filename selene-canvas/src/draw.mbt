@@ -190,39 +190,43 @@ pub impl @system.Backend for CanvasBackend with draw_gradient_rect(
 }
 //画圆形
 pub impl @system.Backend for CanvasBackend with draw_filled_circle(
-  self,
-  x~,
-  y~,
-  radius~,
-  color~,
-  transform~,
+    self, x~, y~, radius~, color~, transform~,
 ) {
-  self.active_context.save()
-  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty)
-  self.active_context.begin_path()
-  self.active_context.arc(x, y, radius, 0.0, 6.28318530718) 
-  self.active_context.set_fill_style(@js.Union3::from0(color))
-  self.active_context.fill() 
-  self.active_context.restore()
+
+    self.active_context.save();
+    self.active_context.translate(x, y);
+    self.active_context.transform(
+        transform.a, transform.b, transform.c, 
+        transform.d, transform.tx, transform.ty
+    );
+    
+    self.active_context.begin_path();
+    self.active_context.arc(0.0, 0.0, radius, 0.0, 2.0 * pi);
+    self.active_context.set_fill_style(@js.Union3::from0(color));
+    self.active_context.fill();
+    
+    self.active_context.restore();
 }
 //画圆框
 pub impl @system.Backend for CanvasBackend with draw_stroke_circle(
-  self,
-  x~,
-  y~,
-  radius~,
-  color~,
-  line_width~,
-  transform~,
+    self, x~, y~, radius~, color~, line_width~, transform~,
 ) {
-  self.active_context.save()
-  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty)
-  self.active_context.begin_path()
-  self.active_context.arc(x, y, radius, 0.0, 6.28318530718)
-  self.active_context.set_stroke_style(@js.Union3::from0(color))
-  self.active_context.set_line_width(line_width)
-  self.active_context.stroke()
-  self.active_context.restore()
+    
+    self.active_context.save();
+    self.active_context.translate(x, y);
+    self.active_context.transform(
+        transform.a, transform.b, transform.c, 
+        transform.d, transform.tx, transform.ty
+    );
+    
+    self.active_context.begin_path();
+    self.active_context.arc(0.0, 0.0, radius, 0.0, 2.0 * pi);
+    
+    self.active_context.set_stroke_style(@js.Union3::from0(color));
+    self.active_context.set_line_width(line_width);
+    self.active_context.stroke();
+    
+    self.active_context.restore();
 }
 //画椭圆
 pub impl @system.Backend for CanvasBackend with draw_filled_ellipse(
