@@ -9,8 +9,17 @@
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// See the License for the a specific language governing permissions and
 // limitations under the License.
+
+/// 音频实例的句柄类型
+// 修正点：为 AudioHandle 自动派生 Eq 和 Hash trait，使其可以用作 Map 的键
+pub struct AudioHandle(UInt64) derive(Eq, Hash)
+
+// 为 AudioHandle 添加一个公有的构造函数
+pub fn AudioHandle::new(value: UInt64) -> AudioHandle {
+  AudioHandle(value)
+}
 
 ///|
 /// Texture repetition behavior for drawing operations.
@@ -116,7 +125,9 @@ pub(open) trait Backend {
     color_start~ : String,
     color_end~ : String,
   ) -> Unit
-  play_audio(Self, audio_path : String, volume~ : Double, loop_~ : Bool) -> Unit
+  play_audio(Self, audio_path : String, volume~ : Double, loop_~ : Bool) -> AudioHandle
+  stop_audio(Self, handle : AudioHandle) -> Unit
+  is_audio_playing(Self, handle : AudioHandle) -> Bool
   get_canvas_size(Self) -> @math.Vec2D
   get_zoom(Self) -> Double
   get_debug_info(Self) -> DebugInfo
@@ -150,8 +161,8 @@ pub(open) trait Backend {
   //绘制一个实心圆形
   draw_filled_circle(
     Self,
-    x~: Double,           //圆心 X 坐标
-    y~: Double,           //圆心 Y 坐标
+    x~: Double,          //圆心 X 坐标
+    y~: Double,          //圆心 Y 坐标
     radius~: Double,      //半径
     color~: String,       //填充颜色
     transform~: @math.Transform,
@@ -160,8 +171,8 @@ pub(open) trait Backend {
   //绘制一个圆形边框（圆环）
   draw_stroke_circle(
     Self,
-    x~: Double,           //圆心 X 坐标
-    y~: Double,           //圆心 Y 坐标
+    x~: Double,          //圆心 X 坐标
+    y~: Double,          //圆心 Y 坐标
     radius~: Double,      //半径
     color~: String,       //边框颜色
     line_width~: Double,  //边框宽度
@@ -171,8 +182,8 @@ pub(open) trait Backend {
   //绘制一个椭圆
   draw_filled_ellipse(
     Self,
-    x~: Double,           // 椭圆中心 X 坐标
-    y~: Double,           // 椭圆中心 Y 坐标
+    x~: Double,          // 椭圆中心 X 坐标
+    y~: Double,          // 椭圆中心 Y 坐标
     radius_x~: Double,    // 横向半径
     radius_y~: Double,    // 纵向半径
     rotation~: Double,    // 旋转角度（弧度制）
@@ -183,8 +194,8 @@ pub(open) trait Backend {
   //绘制一个椭圆边框（椭圆环）
   draw_stroke_ellipse(
     Self,
-    x~: Double,           // 椭圆中心 X 坐标
-    y~: Double,           // 椭圆中心 Y 坐标
+    x~: Double,          // 椭圆中心 X 坐标
+    y~: Double,          // 椭圆中心 Y 坐标
     radius_x~: Double,    // 横向半径
     radius_y~: Double,    // 纵向半径
     rotation~: Double,    // 旋转角度（弧度制）
@@ -195,23 +206,24 @@ pub(open) trait Backend {
   //实心的等边三角形
   draw_filled_triangle(
     Self,
-    x~: Double,           // 三角形中心 X 坐标
-    y~: Double,           // 三角形中心 Y 坐标
+    x~: Double,          // 三角形中心 X 坐标
+    y~: Double,          // 三角形中心 Y 坐标
     side~: Double,        // 边长
     rotation~: Double,    // 旋转角度（弧度制）
-    color~: String,        // 填充颜色
+    color~: String,       // 填充颜色
     transform~: @math.Transform,
   ) -> Unit
 
   //等边三角形边框
   draw_stroke_triangle(
     Self,
-    x~: Double,           // 三角形中心 X 坐标
-    y~: Double,           // 三角形中心 Y 坐标
+    x~: Double,          // 三角形中心 X 坐标
+    y~: Double,          // 三角形中心 Y 坐标
     side~: Double,        // 边长
     rotation~: Double,    // 旋转角度（弧度制）
-    color~: String,        // 边框颜色
+    color~: String,       // 边框颜色
     line_width~: Double, // 边框宽度
     transform~: @math.Transform,
   ) -> Unit
 }
+
