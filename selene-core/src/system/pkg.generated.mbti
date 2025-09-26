@@ -79,6 +79,13 @@ fn App::with_fps(Self, UInt) -> Self
 fn App::with_image_smooth(Self, Bool) -> Self
 fn App::with_zoom(Self, Double) -> Self
 
+pub struct AudioHandle(UInt64)
+#deprecated
+fn AudioHandle::inner(Self) -> UInt64
+fn AudioHandle::new(UInt64) -> Self
+impl Eq for AudioHandle
+impl Hash for AudioHandle
+
 pub(all) enum Code {
   KeyA
   KeyB
@@ -182,7 +189,9 @@ pub(open) trait Backend {
   draw_text(Self, String, x~ : Double, y~ : Double, font~ : String, color~ : String, transform~ : @math.Transform) -> Unit
   draw_color_rect(Self, x~ : Double, y~ : Double, width~ : Double, height~ : Double, color~ : String) -> Unit
   draw_gradient_rect(Self, x~ : Double, y~ : Double, width~ : Double, height~ : Double, color_start~ : String, color_end~ : String) -> Unit
-  play_audio(Self, String, volume~ : Double, loop_~ : Bool) -> Unit
+  play_audio(Self, String, volume~ : Double, loop_~ : Bool) -> AudioHandle
+  stop_audio(Self, AudioHandle) -> Unit
+  is_audio_playing(Self, AudioHandle) -> Bool
   get_canvas_size(Self) -> @math.Vec2D
   get_zoom(Self) -> Double
   get_debug_info(Self) -> DebugInfo
@@ -197,5 +206,8 @@ pub(open) trait Backend {
   draw_stroke_ellipse(Self, x~ : Double, y~ : Double, radius_x~ : Double, radius_y~ : Double, rotation~ : Double, color~ : String, line_width~ : Double, transform~ : @math.Transform) -> Unit
   draw_filled_triangle(Self, x~ : Double, y~ : Double, side~ : Double, rotation~ : Double, color~ : String, transform~ : @math.Transform) -> Unit
   draw_stroke_triangle(Self, x~ : Double, y~ : Double, side~ : Double, rotation~ : Double, color~ : String, line_width~ : Double, transform~ : @math.Transform) -> Unit
+  draw_cross(Self, x~ : Double, y~ : Double, length~ : Double, thickness~ : Double, angle~ : Double, color~ : String, transform~ : @math.Transform) -> Unit
+  draw_filled_capsule(Self, x~ : Double, y~ : Double, length~ : Double, radius~ : Double, color~ : String, transform~ : @math.Transform, rotation~ : Double) -> Unit
+  draw_stroke_capsule(Self, x~ : Double, y~ : Double, length~ : Double, radius~ : Double, color~ : String, line_width~ : Double, transform~ : @math.Transform, rotation~ : Double) -> Unit
 }
 

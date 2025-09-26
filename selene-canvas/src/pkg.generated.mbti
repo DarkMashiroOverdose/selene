@@ -25,13 +25,6 @@ fn time_now() -> Double
 // Errors
 
 // Types and methods
-type Audio
-fn Audio::new(String) -> Self
-fn Audio::pause(Self) -> Unit
-fn Audio::play(Self) -> Unit
-fn Audio::set_loop(Self, Bool) -> Unit
-fn Audio::set_volume(Self, Double) -> Unit
-
 type CanvasBackend
 fn CanvasBackend::new() -> Self
 impl @system.Backend for CanvasBackend

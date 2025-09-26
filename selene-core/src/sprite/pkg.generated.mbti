@@ -83,8 +83,12 @@ pub enum Shape {
   Circle(Double)
   Ellipse(Double, Double, Double)
   Triangle(Double, Double)
+  Cross(Double, Double, Double)
+  Capsule(Double, Double)
 }
+fn Shape::capsule(Double, Double) -> Self
 fn Shape::circle(Double) -> Self
+fn Shape::cross(Double, Double, Double) -> Self
 fn Shape::ellipse(Double, Double, Double) -> Self
 fn Shape::rect(Double, Double, Double) -> Self
 fn Shape::triangle(Double, Double) -> Self

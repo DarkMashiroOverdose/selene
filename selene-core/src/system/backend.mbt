@@ -143,7 +143,7 @@ pub(open) trait Backend {
     width~ : Double,
     height~ : Double,
     color~ : String,
-    rotation~: Double, // <-- 新增
+    rotation~: Double,
     transform~: @math.Transform,
   ) -> Unit
   //绘制一个方框
@@ -155,7 +155,7 @@ pub(open) trait Backend {
     height~: Double,
     color~: String,
     line_width~: Double,
-    rotation~: Double, // <-- 新增
+    rotation~: Double,
     transform~: @math.Transform,
   ) -> Unit
   //绘制一个实心圆形
@@ -222,8 +222,43 @@ pub(open) trait Backend {
     side~: Double,        // 边长
     rotation~: Double,    // 旋转角度（弧度制）
     color~: String,       // 边框颜色
-    line_width~: Double, // 边框宽度
+    line_width~: Double,  // 边框宽度
     transform~: @math.Transform,
   ) -> Unit
+  //叉叉
+  draw_cross(
+    Self, 
+    x~: Double,   //叉叉中心 X坐标
+    y~: Double,   //叉叉中心 Y坐标
+    length~: Double,    //叉叉线长
+    thickness~: Double, //叉叉线粗
+    angle~: Double, //叉叉夹角（弧度制）
+    color~: String, //颜色
+    transform~: @math.Transform
+  ) -> Unit
+  
+  // 胶囊形状
+  draw_filled_capsule(
+    Self, 
+    x~: Double, 
+    y~: Double, 
+    length~: Double,  //长度
+    radius~: Double,  //半圆半径
+    color~: String,   //颜色
+    transform~: @math.Transform, 
+    rotation~: Double
+  ) -> Unit
+  draw_stroke_capsule(
+    Self, 
+    x~: Double, 
+    y~: Double, 
+    length~: Double,  //长度
+    radius~: Double,  //半圆半径
+    color~: String,   //颜色
+    line_width~: Double,  //边框粗细
+    transform~: @math.Transform, 
+    rotation~: Double
+    ) -> Unit
+
 }
 

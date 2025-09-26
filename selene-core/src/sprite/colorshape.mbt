@@ -4,12 +4,22 @@ pub enum Shape {
   Circle(Double)
   Ellipse(Double, Double, Double)
   Triangle(Double, Double)
+  Cross(Double, Double, Double)
+  Capsule(Double, Double)
 }
 pub fn Shape::rect(width: Double, height: Double, rotation: Double) -> Shape { Rect(width, height, rotation) }
 pub fn Shape::circle(radius: Double) -> Shape { Circle(radius) }
 pub fn Shape::ellipse(radius_x: Double, radius_y: Double, rotation: Double) -> Shape { Ellipse(radius_x, radius_y, rotation) }
 
 pub fn Shape::triangle(side: Double, rotation: Double) -> Shape { Triangle(side, rotation) }
+
+pub fn Shape::cross(length: Double, thickness: Double, angle: Double) -> Shape { 
+  Cross(length, thickness, angle) 
+}
+
+pub fn Shape::capsule(length: Double, radius: Double) -> Shape { 
+  Capsule(length, radius) 
+}
 pub enum DrawStyle {
   Fill(String)
   Stroke(String, Double) // color, line_width
@@ -66,6 +76,26 @@ fn render_colored_shape(
             transform=transform,
             
           )
+        Capsule(length, radius) =>
+          backend.draw_filled_capsule(
+            x=position[X], 
+            y=position[Y], 
+            length=length, 
+            radius=radius, 
+            color=color, 
+            transform=transform, 
+            rotation=0.0
+          )
+        Cross(length, thickness, angle) =>
+          backend.draw_cross(
+            x=position[X], 
+            y=position[Y], 
+            length=length, 
+            thickness=thickness, 
+            angle=angle, 
+            color=color, 
+            transform=transform
+          )
       }
     }
     Stroke(color, line_width) => {
@@ -96,6 +126,27 @@ fn render_colored_shape(
             rotation=rotation, 
             color=color, 
             line_width=line_width, transform=transform,
+          )
+        Cross(length, thickness, angle) =>
+          backend.draw_cross(
+            x=position[X], 
+            y=position[Y], 
+            length=length, 
+            thickness=thickness, 
+            angle=angle, 
+            color=color, 
+            transform=transform
+          )
+        Capsule(length, radius) => 
+          backend.draw_stroke_capsule(
+            x=position[X], 
+            y=position[Y], 
+            length=length, 
+            radius=radius, 
+            color=color, 
+            line_width=line_width, 
+            transform=transform, 
+            rotation=0.0
           )
       }
     }

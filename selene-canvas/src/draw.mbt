@@ -348,3 +348,75 @@ pub impl @system.Backend for CanvasBackend with draw_stroke_triangle(
     
     self.active_context.restore();
 }
+///画X型
+pub impl @system.Backend for CanvasBackend with draw_cross(
+  self, x~, y~, length~, thickness~, angle~, color~, transform~,
+) {
+  let half_len = length / 2.0;
+  let half_angle_rad = angle * pi / 360.0;
+
+  self.active_context.save();
+  self.active_context.translate(x, y);
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty); 
+  
+  self.active_context.begin_path();
+
+  let p1_x = half_len * cos(half_angle_rad);
+  let p1_y = half_len * sin(half_angle_rad);
+  self.active_context.move_to(p1_x, p1_y);
+  self.active_context.line_to(-p1_x, -p1_y);
+
+  let p2_x = half_len * cos(-half_angle_rad);
+  let p2_y = half_len * sin(-half_angle_rad);
+  self.active_context.move_to(p2_x, p2_y);
+  self.active_context.line_to(-p2_x, -p2_y);
+
+  self.active_context.set_stroke_style(@js.Union3::from0(color));
+  self.active_context.set_line_width(thickness);
+  self.active_context.stroke();
+  self.active_context.restore();
+}
+
+pub impl @system.Backend for CanvasBackend with draw_filled_capsule(
+  self, x~, y~, length~, radius~, color~, transform~, rotation~,
+) {
+  let half_len = length / 2.0;
+
+  self.active_context.save();
+  self.active_context.translate(x, y);
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+  self.active_context.rotate(rotation);
+
+  self.active_context.begin_path();
+  self.active_context.arc(-half_len, 0.0, radius, 0.5 * pi, 1.5 * pi); // 左半圆
+  self.active_context.line_to(half_len, -radius);
+  self.active_context.arc(half_len, 0.0, radius, 1.5 * pi, 0.5 * pi); // 右半圆
+  self.active_context.close_path();
+
+  self.active_context.set_fill_style(@js.Union3::from0(color));
+  self.active_context.fill();
+  self.active_context.restore();
+}
+
+pub impl @system.Backend for CanvasBackend with draw_stroke_capsule(
+  self, x~, y~, length~, radius~, color~, line_width~, transform~, rotation~,
+) {
+
+  let half_len = length / 2.0;
+
+  self.active_context.save();
+  self.active_context.translate(x, y);
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+  self.active_context.rotate(rotation);
+
+  self.active_context.begin_path();
+  self.active_context.arc(-half_len, 0.0, radius, 0.5 * pi, 1.5 * pi);
+  self.active_context.line_to(half_len, -radius);
+  self.active_context.arc(half_len, 0.0, radius, 1.5 * pi, 0.5 * pi);
+  self.active_context.close_path();
+
+  self.active_context.set_stroke_style(@js.Union3::from0(color));
+  self.active_context.set_line_width(line_width);
+  self.active_context.stroke();
+  self.active_context.restore();
+}

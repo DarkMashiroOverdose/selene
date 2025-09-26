@@ -6,13 +6,18 @@ import(
 )
 
 // Values
-fn play_audio(&@system.Backend, String, volume? : Double, loop_? : Bool) -> Unit
+fn is_audio_playing(&@system.Backend, @system.AudioHandle) -> Bool
+
+fn play_audio(&@system.Backend, String, volume? : Double, loop_? : Bool) -> @system.AudioHandle
+
+fn stop_audio(&@system.Backend, @system.AudioHandle) -> Unit
 
 // Errors
 
 // Types and methods
 
 // Type aliases
+pub typealias @system.AudioHandle as AudioHandle
 
 // Traits
 
