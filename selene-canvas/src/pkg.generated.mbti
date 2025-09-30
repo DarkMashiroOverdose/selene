@@ -12,6 +12,8 @@ fn document_add_event_listener(String, (@dom.Event) -> Unit) -> Unit
 
 fn is_pointer_locked(@dom.HTMLCanvasElement) -> Bool
 
+fn measure_text(@dom.CanvasRenderingContext2D, String) -> TextMetrics
+
 fn request_pointer_lock(@dom.HTMLCanvasElement) -> Unit
 
 fn set_image_smoothing_enabled(@dom.CanvasRenderingContext2D, Bool) -> Unit
@@ -28,6 +30,10 @@ fn time_now() -> Double
 type CanvasBackend
 fn CanvasBackend::new() -> Self
 impl @system.Backend for CanvasBackend
+
+pub struct TextMetrics {
+  width : Double
+}
 
 // Type aliases
 

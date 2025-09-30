@@ -84,6 +84,7 @@ pub enum SpriteType {
   Text(Text)
   ColorRect(ColorRect)
   ColoredShape(ColoredShape)  //添加渲染形状的定义
+  TextLayout(@system.TextLayout)
 }
 
 ///|
@@ -130,6 +131,22 @@ pub fn Sprite::from_text(
 ) -> Sprite {
   { 
     sprite_type: SpriteType::Text(text), 
+    zindex, 
+    offset, 
+    visible: true,
+    layer: get_or(layer, RenderLayer::GameWorld), //添加渲染层级的定义
+    transform: @math.Transform::new(), 
+  }
+}
+///
+pub fn Sprite::from_text_layout(
+  layout: @system.TextLayout,
+  zindex : Int,
+  offset? : @math.Vec2D = @math.Vec2D::zero(),
+  layer? : RenderLayer,
+) -> Sprite {
+  { 
+    sprite_type: SpriteType::TextLayout(layout),
     zindex, 
     offset, 
     visible: true,
@@ -315,5 +332,7 @@ fn render_sprite(backend: &@system.Backend, e: @system.Entity, sprite: Sprite, p
             render_color_rect(backend, color_rect, final_pos)
         ColoredShape(shape) => 
             render_colored_shape(backend, shape, final_pos, sprite.transform)
+        TextLayout(layout) => // 如果是新类型
+            render_text_layout(backend, layout, final_pos, sprite.transform)
     }
 }

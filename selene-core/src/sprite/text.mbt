@@ -65,3 +65,17 @@ fn render_text(
     transform=transform,
   )
 }
+
+fn render_text_layout(
+  backend: &@system.Backend,
+  layout: @system.TextLayout,
+  position: @math.Vec2D,
+  transform: @math.Transform,
+) -> Unit {
+  backend.draw_text_layout(
+    layout,
+    position[X],
+    position[Y],
+    transform,
+  )
+}

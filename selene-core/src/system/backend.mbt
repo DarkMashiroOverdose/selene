@@ -11,6 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the a specific language governing permissions and
 // limitations under the License.
+//用于定义渲染层级的默认值,以适配无layer参数的旧版本精灵
+//代码来源https://www.moonbitlang.com/assets/files/lec4-ad72a543cfc3959ebd73b9a96a3afc56.pdf
+pub fn[T] get_or(opt: Option[T], default: T) -> T {
+  match opt {
+    Some(value) => value
+    None => default
+  }
+}
 
 /// 音频实例的句柄类型
 // 修正点：为 AudioHandle 自动派生 Eq 和 Hash trait，使其可以用作 Map 的键
@@ -20,6 +28,45 @@ pub struct AudioHandle(UInt64) derive(Eq, Hash)
 pub fn AudioHandle::new(value: UInt64) -> AudioHandle {
   AudioHandle(value)
 }
+
+pub enum TextAlign {
+  Left
+  Center
+  Right
+} derive(Eq, Show)
+pub fn TextAlign::left() -> TextAlign { Left }
+pub fn TextAlign::center() -> TextAlign { Center }
+pub fn TextAlign::right() -> TextAlign { Right }
+
+// 【新增】定义一个纯数据的 TextLayout 结构体
+pub struct TextLayout {
+  content: String
+  font: String
+  color: String
+  max_width: Option[Double]
+  align: TextAlign
+  line_height: Double
+}
+
+// 【新增】为 TextLayout 提供一个公有的 new 构造函数
+pub fn TextLayout::new(
+  content: String,
+  color?: String,
+  font?: String,
+  max_width?: Option[Double],
+  align?: TextAlign,
+  line_height?: Double,
+) -> TextLayout {
+    { 
+        content, 
+        color: get_or(color, "white"), 
+        font: get_or(font, "16px Arial"),
+        max_width: get_or(max_width, None),
+        align: get_or(align, TextAlign::Left),
+        line_height: get_or(line_height, 18.0),
+    }
+}
+
 
 ///|
 /// Texture repetition behavior for drawing operations.
@@ -107,6 +154,13 @@ pub(open) trait Backend {
     font~ : String,
     color~ : String,
     transform~: @math.Transform,
+  ) -> Unit
+  draw_text_layout(
+    Self,
+    text_component: TextLayout, // 直接传递整个 Text 组件
+    x: Double,
+    y: Double,
+    transform: @math.Transform,
   ) -> Unit
   draw_color_rect(
     Self,

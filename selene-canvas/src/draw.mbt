@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+pub extern "js" fn measure_text(
+  ctx: @dom.CanvasRenderingContext2D,
+  text: String
+) -> TextMetrics = "(ctx, text) => ctx.measureText(text)"
 ///|
 extern "js" fn sqrt(x: Double) -> Double = "(x) => Math.sqrt(x)"
 extern "js" fn sin(x: Double) -> Double = "(x) => Math.sin(x)"
@@ -20,6 +24,12 @@ let pi = 3.141592653589793
 //本页面所有的self.context均改为self.active_context以支持分层渲染
 let element_cache : Map[String, @dom.HTMLImageElement] = Map::new()
 
+// TextMetrics 结构体，我们目前只需要 width
+pub struct TextMetrics {
+  width: Double
+}
+
+// 绑定浏览器的 measureText 功能
 //设置渲染层级
 pub impl @system.Backend for CanvasBackend with set_render_target(
   self,
@@ -418,5 +428,63 @@ pub impl @system.Backend for CanvasBackend with draw_stroke_capsule(
   self.active_context.set_stroke_style(@js.Union3::from0(color));
   self.active_context.set_line_width(line_width);
   self.active_context.stroke();
+  self.active_context.restore();
+}
+
+pub impl @system.Backend for CanvasBackend with draw_text_layout(
+  self, text_component, x, y, transform,
+) {
+  self.active_context.save();
+  self.active_context.transform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+  self.active_context.set_font(text_component.font);
+  self.active_context.set_fill_style(@js.Union3::from0(text_component.color));
+
+  let final_lines = Array::new();
+  
+  let paragraphs = text_component.content.split("\n");
+
+  for paragraph in paragraphs {
+    if text_component.max_width is Some(max_width) {
+      let mut current_line = "";
+      let chars = paragraph.to_array();
+
+      for char in chars {
+        let test_line = current_line + char.to_string();
+        let metrics = measure_text(self.active_context, test_line);
+
+        if metrics.width > max_width && current_line != "" {
+          final_lines.push(current_line);
+          current_line = char.to_string();
+        } else {
+          current_line = test_line;
+        }
+      }
+      final_lines.push(current_line);
+    } else {
+      final_lines.push(paragraph.to_string());
+    }
+  }
+
+  for i = 0; i < final_lines.length(); i = i + 1 {
+    let line = final_lines[i];
+    let metrics = measure_text(self.active_context, line);
+    let line_width = metrics.width;
+    
+    let draw_x = match text_component.align {
+      @system.TextAlign::Left => x
+      @system.TextAlign::Center => {
+        let max_w = if text_component.max_width is Some(w) { w } else { line_width };
+        x + (max_w - line_width) / 2.0
+      }
+      @system.TextAlign::Right => {
+        let max_w = if text_component.max_width is Some(w) { w } else { line_width };
+        x + max_w - line_width
+      }
+    };
+    
+    let draw_y = y + (i.to_double() * text_component.line_height);
+    self.active_context.fill_text(line, draw_x, draw_y);
+  }
+
   self.active_context.restore();
 }

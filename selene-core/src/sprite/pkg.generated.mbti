@@ -106,6 +106,7 @@ fn Sprite::from_color_rect(ColorRect, Int, offset? : @math.Vec2D, layer? : Rende
 fn Sprite::from_picture(Picture, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 fn Sprite::from_shape(ColoredShape, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 fn Sprite::from_text(Text, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
+fn Sprite::from_text_layout(@system.TextLayout, Int, offset? : @math.Vec2D, layer? : RenderLayer) -> Self
 
 pub enum SpriteType {
   Picture(Picture)
@@ -113,6 +114,7 @@ pub enum SpriteType {
   Text(Text)
   ColorRect(ColorRect)
   ColoredShape(ColoredShape)
+  TextLayout(@system.TextLayout)
 }
 
 pub(all) struct Text {

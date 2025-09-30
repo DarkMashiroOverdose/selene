@@ -15,6 +15,8 @@ fn defer_event(() -> Unit) -> Unit
 
 fn deferred_event_system(&Backend) -> Unit
 
+fn[T] get_or(T?, T) -> T
+
 fn is_just_pressed(Code) -> Bool
 
 fn is_just_released(Code) -> Bool
@@ -174,6 +176,27 @@ pub(all) enum Schedule {
   UpdateTime(Double)
 }
 
+pub enum TextAlign {
+  Left
+  Center
+  Right
+}
+fn TextAlign::center() -> Self
+fn TextAlign::left() -> Self
+fn TextAlign::right() -> Self
+impl Eq for TextAlign
+impl Show for TextAlign
+
+pub struct TextLayout {
+  content : String
+  font : String
+  color : String
+  max_width : Double?
+  align : TextAlign
+  line_height : Double
+}
+fn TextLayout::new(String, color? : String, font? : String, max_width? : Double?, align? : TextAlign, line_height? : Double) -> Self
+
 // Type aliases
 pub typealias () -> Unit as Event
 
@@ -187,6 +210,7 @@ pub(open) trait Backend {
   lock_mouse(Self, Ref[Bool]) -> Unit
   draw_stroke_rect(Self, x~ : Double, y~ : Double, width~ : Double, height~ : Double, color~ : String, transform~ : @math.Transform) -> Unit
   draw_text(Self, String, x~ : Double, y~ : Double, font~ : String, color~ : String, transform~ : @math.Transform) -> Unit
+  draw_text_layout(Self, TextLayout, Double, Double, @math.Transform) -> Unit
   draw_color_rect(Self, x~ : Double, y~ : Double, width~ : Double, height~ : Double, color~ : String) -> Unit
   draw_gradient_rect(Self, x~ : Double, y~ : Double, width~ : Double, height~ : Double, color_start~ : String, color_end~ : String) -> Unit
   play_audio(Self, String, volume~ : Double, loop_~ : Bool) -> AudioHandle
